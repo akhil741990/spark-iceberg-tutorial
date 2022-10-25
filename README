@@ -1,0 +1,75 @@
+
+
+
+
+
+1) Start spark master and worker : docker-compose up
+
+2) Verify  by checking the the spark master UI : http://localhost:8080
+
+3) Create iceberg warehouse directory : 
+   docker exec -it <masterConatinerId> mkdir -p /iceberg/warehouse
+   docker exec -it <workerConatinerId> mkdir -p /iceberg/warehouse
+
+
+
+3) Pass iceberg dependencies while launching connecting to spark-sql : 
+
+
+
+spark-sql --packages org.apache.iceberg:iceberg-spark-runtime-3.2_2.12:1.0.0\
+    --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions \
+    --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog \
+    --conf spark.sql.catalog.spark_catalog.type=hive \
+    --conf spark.sql.catalog.local=org.apache.iceberg.spark.SparkCatalog \
+    --conf spark.sql.catalog.local.type=hadoop \
+    --conf spark.sql.catalog.local.warehouse=/iceberg/warehouse
+	
+	
+	
+	
+4) Command to create table and insert data
+	
+  CREATE TABLE local.db.table (id bigint, data string) USING iceberg;
+
+  INSERT INTO local.db.table VALUES (1, 'a'), (2, 'b'), (3, 'c');
+
+
+5) Create table with partition
+
+
+
+CREATE TABLE local.db.sample (
+
+    id bigint,
+
+    data string,
+
+    category string,
+
+    ts timestamp)
+
+USING iceberg
+
+PARTITIONED BY (days(ts));
+
+
+
+
+
+6) Insert data into partitioned table
+
+INSERT INTO local.db.sample VALUES (1, "hello","cat1",timestamp '2022-09-01 09:01:16'), (2, "helo","cat2",timestamp '2022-09-02 09:01:16'), (3, "hey","cat3",timestamp '2022-09-03 09:01:16');
+
+
+
+7) Check the data layout on disk : 
+
+bash-5.0# ls -ltr /iceberg/warehouse/db/sample/data/
+total 12
+drwxr-xr-x 2 root root 4096 Oct  2 11:16 'ts_day=2022-09-01'
+drwxr-xr-x 2 root root 4096 Oct  2 11:16 'ts_day=2022-09-02'
+drwxr-xr-x 2 root root 4096 Oct  2 11:16 'ts_day=2022-09-03'
+bash-5.0# 
+
+
