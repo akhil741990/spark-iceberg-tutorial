@@ -67,3 +67,28 @@ drwxr-xr-x 2 root root 4096 Oct  2 11:16 'ts_day=2022-09-03'
 bash-5.0# 
 
 
+8) Partition Evolution : 
+
+alter table local.db.sample replace partition  field  days(ts) with  months(ts);
+
+Insert data : 
+
+INSERT INTO local.db.sample VALUES (1, "hello","cat1",timestamp '2022-08-01 09:01:16'), (2, "helo","cat2",timestamp '2022-10-02 09:01:16'), (3, "hey","cat3",timestamp '2022-07-03 09:01:16');
+
+
+Data layout after partition evolution from day(ts)----> months(ts) : 
+
+/iceberg/warehouse/db/sample/data
+bash-5.0# ls -ltr
+total 16
+drwxr-xr-x 2 root root 4096 Oct 26 02:20 'ts_day=2022-09-02'
+drwxr-xr-x 2 root root 4096 Oct 26 02:20 'ts_day=2022-09-01'
+drwxr-xr-x 2 root root 4096 Oct 26 02:20 'ts_day=2022-09-03'
+drwxr-xr-x 5 root root 4096 Oct 30 06:35 'ts_day=null'
+bash-5.0# ls -ltr ts_day\=null/
+total 12
+drwxr-xr-x 2 root root 4096 Oct 30 06:35 'ts_month=2022-08'
+drwxr-xr-x 2 root root 4096 Oct 30 06:35 'ts_month=2022-07'
+drwxr-xr-x 2 root root 4096 Oct 30 06:35 'ts_month=2022-10'
+bash-5.0# 
+
